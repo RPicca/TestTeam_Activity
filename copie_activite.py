@@ -1,18 +1,8 @@
 import openpyxl
 import matplotlib.pyplot as plt
+import PySimpleGUI as sg 
 
 #TODO1 : gérer les feuilles cachées (prio faible)
-
-#===============================================================================
-# Config
-#===============================================================================
-# Nom du fichier : celui-ci ne doit contenir que des feuilles de répartition d'activités
-#(penser à vérifier les feuilles cachées)
-xlsx_file ='Suivi_01.xlsx'
-
-#===============================================================================
-wb_obj = openpyxl.load_workbook(xlsx_file, data_only=True)
-
 
 #Retourne une liste avec la valeur des cellules d'une plage d'une feuille
 def read_range_cells(sheet, r):
@@ -111,9 +101,31 @@ def write(dico, weeks):
             row+=1
     wb.save(filename = "Output.xlsx")
 
+
+#====================================================================================================
+#                                       Recup d'info dans la GUI
+#====================================================================================================
+def interface():
+    layout = [  [sg.Text("Path to Activity Excel file")],     # Part 2 - The Layout
+            [sg.Input()],
+            [sg.Button('Run')] ]
+    # Create the window
+    window = sg.Window('TestTeam Activity', layout)      # Part 3 - Window Defintion
+
+    # Display and interact with the Window
+    event, values = window.read()                   # Part 4 - Event loop or Window.read call
+
+    window.close()
+    return values[0]
+
 #====================================================================================================
 #                                                Main
 #====================================================================================================
+# Nom du fichier : celui-ci ne doit contenir que des feuilles de répartition d'activités
+#(penser à vérifier les feuilles cachées)
+xlsx_file =interface()
+#===============================================================================
+wb_obj = openpyxl.load_workbook(xlsx_file, data_only=True)
 dico={}
 weeks=[]
 for sheetname in wb_obj.sheetnames:
