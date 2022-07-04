@@ -63,6 +63,8 @@ def stackplot(dico, weeks):
     plt.xlabel("Semaine", fontsize=16)
     plt.title("Activités de l'équipe Test", fontsize=24)
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=5)
+    manager = plt.get_current_fig_manager()
+    manager.window.state('zoomed')
     plt.show()
 
 #====================================================================================================
@@ -107,6 +109,9 @@ def write(dico, weeks):
 #====================================================================================================
 def interface():
     layout = [[sg.T("")], [sg.Text("Choose a file: "), sg.Input(key="file"), sg.FileBrowse()],
+            [sg.Checkbox('Show Stackplot', default=True, key="stackplot")],
+            [sg.Checkbox('Write output in xlsx file', default=True, key="write")],
+            [sg.Checkbox('Show Pie (awful design)', default=False, key="pie")],
             [sg.Button('Run')] ]
     # Create the window
     window = sg.Window('TestTeam Activity', layout)      # Part 3 - Window Defintion
@@ -115,14 +120,23 @@ def interface():
     event, values = window.read()                   # Part 4 - Event loop or Window.read call
 
     window.close()
-    return values["file"]
+    dico={}
+    dico["file"]=values["file"]
+    dico["stackplot"]=values["stackplot"]
+    dico["write"]=values["write"]
+    dico["pie"]=values["pie"]
+    return dico
 
 #====================================================================================================
 #                                                Main
 #====================================================================================================
 # Nom du fichier : celui-ci ne doit contenir que des feuilles de répartition d'activités
 #(penser à vérifier les feuilles cachées)
-xlsx_file =interface()
+UI = interface()
+xlsx_file = UI["file"]
+stack = UI["stackplot"]
+write_output=UI["write"]
+pie_chart=UI["pie"]
 #===============================================================================
 wb_obj = openpyxl.load_workbook(xlsx_file, data_only=True)
 dico={}
@@ -137,7 +151,9 @@ legend=list(dico.keys())
 weeks.reverse()
 for i in dico.keys():
     dico[i].reverse()
-    
-stackplot(dico, weeks)
-#pie(dico)
-write(dico, weeks)
+if stack:   
+    stackplot(dico, weeks)
+if pie_chart:
+    pie(dico)
+if write_output:
+    write(dico, weeks)
