@@ -106,8 +106,7 @@ def write(dico, weeks):
 #                                       Recup d'info dans la GUI
 #====================================================================================================
 def interface():
-    layout = [  [sg.Text("Path to Activity Excel file")],     # Part 2 - The Layout
-            [sg.Input()],
+    layout = [[sg.T("")], [sg.Text("Choose a file: "), sg.Input(), sg.FileBrowse()],
             [sg.Button('Run')] ]
     # Create the window
     window = sg.Window('TestTeam Activity', layout)      # Part 3 - Window Defintion
