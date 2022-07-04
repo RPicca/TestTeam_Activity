@@ -13,6 +13,7 @@ def read_range_cells(sheet, r):
     return l
 
 def find_range(sheet, word):
+    I=J=-1
     #On cherche la première cellule des activités ou du temps
     for i in range(1,101):
         for j in range(1,101):
@@ -22,6 +23,8 @@ def find_range(sheet, word):
                 I=i+2
                 J=j
                 break
+    if I==-1:
+        return None
     for i in range(I,101):
         if(sheet.cell(i,J).value)==None:
             last_cell=sheet.cell(i-1,J).coordinate
@@ -31,6 +34,9 @@ def update_dico(sheet, dico):
     c=-1
     range_topic=find_range(sheet, 'HEATMAP')
     range_time=find_range(sheet, 'Total')
+    if range_time == None or range_topic == None:
+        print("Sheet "+ sheet.title+" does not contain the HEATMAP and Total Keywords")
+        return -1
     keys= read_range_cells(sheet, range_topic)
     values=read_range_cells(sheet, range_time)
     # On choppe la taille des valeurs du dico -> Nbr de semaines déjà remplies
@@ -50,12 +56,16 @@ def update_dico(sheet, dico):
     # Ne pas oublier d'ajouter des 0 pour les activités n'ayant pas eu lieu cette semaine
     for k in set(dico.keys())-set(keys):
         dico[k].append(0)
+    return 0
   
 
 #====================================================================================================
 #                                                Graph
 #====================================================================================================
-def stackplot(dico, weeks): 
+def stackplot(dico, Weeks):
+    weeks=[]
+    for i in Weeks:
+        weeks.append(i.split("_")[0])
     fig, ax = plt.subplots()
     plt.stackplot(X, list(dico.values()), labels = dico.keys())
     plt.xticks(X, weeks)
@@ -90,7 +100,7 @@ def pie(dico):
 def write(dico, weeks):
     #On écrit le dico dans une feuille excel
     wb = openpyxl.Workbook()
-    ws = ws1 = wb.active
+    ws = wb.active
     for i in range(1, len(weeks)+1):
         ws.cell(i+1,1,weeks[i-1])
     col=1
@@ -107,17 +117,17 @@ def write(dico, weeks):
 #====================================================================================================
 #                                       Recup d'info dans la GUI
 #====================================================================================================
-def interface():
+def interface_input():
     layout = [[sg.T("")], [sg.Text("Choose a file: "), sg.Input(key="file"), sg.FileBrowse()],
             [sg.Checkbox('Show Stackplot', default=True, key="stackplot")],
             [sg.Checkbox('Write output in xlsx file', default=True, key="write")],
             [sg.Checkbox('Show Pie (awful design)', default=False, key="pie")],
             [sg.Button('Run')] ]
     # Create the window
-    window = sg.Window('TestTeam Activity', layout)      # Part 3 - Window Defintion
+    window = sg.Window('TestTeam Activity', layout)
 
     # Display and interact with the Window
-    event, values = window.read()                   # Part 4 - Event loop or Window.read call
+    event, values = window.read()
 
     window.close()
     dico={}
@@ -126,13 +136,36 @@ def interface():
     dico["write"]=values["write"]
     dico["pie"]=values["pie"]
     return dico
-
+#====================================================================================================
+#                                     GUI de selection de la plage
+#====================================================================================================
+def interface_data_range(path, weeks):
+    layout = [[sg.T(""), sg.Text(path)],
+              [sg.Text("Choose first week"), sg.Listbox(weeks, size=(30,3), key="first")],
+              [sg.Text("Choose last week"), sg.Listbox(weeks, size=(30,3), key="last")],
+              [sg.Button('Run', key="Run")]]
+    # Create the window
+    window = sg.Window('Data Range', layout)
+    # Display and interact with the Window
+    event, values = window.read()
+    if event=="Run":
+        return[window.Element('first').Widget.curselection()[0], window.Element('last').Widget.curselection()[0]]
+#====================================================================================================
+#                                       Détection des feuilles Excel
+#====================================================================================================
+def filter_sheets(workbook):
+    L=[]
+    for sheetname in wb_obj.sheetnames:
+        # On considère qu'une feuille est exploitable si elle contient un S au début
+        if (sheetname[0] == "S" or sheetname[0]=="s") and any(char.isdigit() for char in sheetname):
+            L.append(sheetname)
+    return L
 #====================================================================================================
 #                                                Main
 #====================================================================================================
 # Nom du fichier : celui-ci ne doit contenir que des feuilles de répartition d'activités
 #(penser à vérifier les feuilles cachées)
-UI = interface()
+UI = interface_input()
 xlsx_file = UI["file"]
 stack = UI["stackplot"]
 write_output=UI["write"]
@@ -141,16 +174,18 @@ pie_chart=UI["pie"]
 wb_obj = openpyxl.load_workbook(xlsx_file, data_only=True)
 dico={}
 weeks=[]
-for sheetname in wb_obj.sheetnames:
-    weeks.append(sheetname.split("_")[0])
-    update_dico(wb_obj[sheetname], dico)
-
+sheets = filter_sheets(wb_obj)
+[first, last] =interface_data_range(xlsx_file, sheets)
+for sheetname in sheets[last:first+1]:
+    if update_dico(wb_obj[sheetname], dico)==0:
+        weeks.append(sheetname)
 X=range(len(weeks))
 legend=list(dico.keys())
 #On se remet dans le bon sens
 weeks.reverse()
 for i in dico.keys():
     dico[i].reverse()
+
 if stack:   
     stackplot(dico, weeks)
 if pie_chart:
