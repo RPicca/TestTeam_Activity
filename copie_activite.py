@@ -106,7 +106,7 @@ def write(dico, weeks):
 #                                       Recup d'info dans la GUI
 #====================================================================================================
 def interface():
-    layout = [[sg.T("")], [sg.Text("Choose a file: "), sg.Input(), sg.FileBrowse()],
+    layout = [[sg.T("")], [sg.Text("Choose a file: "), sg.Input(key="file"), sg.FileBrowse()],
             [sg.Button('Run')] ]
     # Create the window
     window = sg.Window('TestTeam Activity', layout)      # Part 3 - Window Defintion
@@ -115,7 +115,7 @@ def interface():
     event, values = window.read()                   # Part 4 - Event loop or Window.read call
 
     window.close()
-    return values[0]
+    return values["file"]
 
 #====================================================================================================
 #                                                Main
