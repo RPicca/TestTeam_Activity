@@ -28,6 +28,7 @@ def find_range(sheet, word):
             last_cell=sheet.cell(i-1,J).coordinate
             break
     return [first_cell,last_cell]
+
 def update_dico(sheet, dico):
     c=-1
     range_topic=find_range(sheet, 'HEATMAP')
@@ -72,13 +73,16 @@ def stackplot(dico, Weeks):
         weeks.append(tmp)
     fig, ax = plt.subplots()
     X = range(len(weeks))
+    if (len(weeks))>30:
+        for i in range (0,len(weeks)-1,2):
+            weeks[i]=""
     plt.stackplot(X, list(dico.values()), labels = dico.keys())
-    plt.xticks(X, weeks, fontsize=22)
-    plt.yticks(fontsize=22)
-    plt.ylabel("Nombre de jours", fontsize=24)
-    plt.xlabel("Semaine", fontsize=24)
+    plt.xticks(X, weeks, fontsize=24)
+    plt.yticks(fontsize=24)
+    plt.ylabel("Nombre de jours", fontsize=30)
+    plt.xlabel("Semaines", fontsize=30)
     plt.title("Activités de l'équipe Test", fontsize=30)
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), fancybox=True, shadow=True, ncol=5, fontsize=22)
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), fancybox=True, shadow=True, ncol=5, fontsize=24)
     manager = plt.get_current_fig_manager()
     manager.window.state('zoomed')
     plt.subplots_adjust(bottom=0.2)
