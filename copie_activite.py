@@ -63,16 +63,25 @@ def update_dico(sheet, dico):
 def stackplot(dico, Weeks):
     weeks=[]
     for i in Weeks:
-        weeks.append(i.split("_")[0])
+        # On ne garde que le numéro de semaine, ça prend trop de place sinon...
+        # Normalement il y a un underscore -> on prend tout ce qu'il y a avant.
+        # Sinon on ne garde que les 3 premiers caractères
+        tmp=i.split("_")[0]
+        if len(tmp)>3:
+            tmp=tmp[:3]
+        weeks.append(tmp)
     fig, ax = plt.subplots()
+    X = range(len(weeks))
     plt.stackplot(X, list(dico.values()), labels = dico.keys())
-    plt.xticks(X, weeks)
-    plt.ylabel("Nombre de jours", fontsize=16)
-    plt.xlabel("Semaine", fontsize=16)
-    plt.title("Activités de l'équipe Test", fontsize=24)
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=5)
+    plt.xticks(X, weeks, fontsize=22)
+    plt.yticks(fontsize=22)
+    plt.ylabel("Nombre de jours", fontsize=24)
+    plt.xlabel("Semaine", fontsize=24)
+    plt.title("Activités de l'équipe Test", fontsize=30)
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), fancybox=True, shadow=True, ncol=5, fontsize=22)
     manager = plt.get_current_fig_manager()
     manager.window.state('zoomed')
+    plt.subplots_adjust(bottom=0.2)
     plt.show()
 
 #====================================================================================================
@@ -175,7 +184,6 @@ sheets = filter_sheets(wb_obj)
 for sheetname in sheets[last:first+1]:
     if update_dico(wb_obj[sheetname], dico)==0:
         weeks.append(sheetname)
-X=range(len(weeks))
 legend=list(dico.keys())
 #On se remet dans le bon sens
 weeks.reverse()
