@@ -2,8 +2,6 @@ import openpyxl
 import matplotlib.pyplot as plt
 import PySimpleGUI as sg 
 
-#TODO1 : gérer les feuilles cachées (prio faible)
-
 #Retourne une liste avec la valeur des cellules d'une plage d'une feuille
 def read_range_cells(sheet, r):
     cells = sheet[r[0]:r[1]]
@@ -163,8 +161,6 @@ def filter_sheets(workbook):
 #====================================================================================================
 #                                                Main
 #====================================================================================================
-# Nom du fichier : celui-ci ne doit contenir que des feuilles de répartition d'activités
-#(penser à vérifier les feuilles cachées)
 UI = interface_input()
 xlsx_file = UI["file"]
 stack = UI["stackplot"]
