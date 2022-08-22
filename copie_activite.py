@@ -61,7 +61,11 @@ def update_dico(sheet, dico):
 #====================================================================================================
 #                                                Graph
 #====================================================================================================
-def stackplot(dico, Weeks):
+def stackplot(dico, Weeks, fntsize):
+    if fntsize=="":
+        fntsize=18
+    else:
+        fntsize=int(fntsize)
     weeks=[]
     for i in Weeks:
         # On ne garde que le numéro de semaine, ça prend trop de place sinon...
@@ -77,12 +81,12 @@ def stackplot(dico, Weeks):
         for i in range (0,len(weeks)-1,2):
             weeks[i]=""
     plt.stackplot(X, list(dico.values()), labels = dico.keys())
-    plt.xticks(X, weeks, fontsize=24)
-    plt.yticks(fontsize=24)
-    plt.ylabel("Nombre de jours", fontsize=30)
-    plt.xlabel("Semaines", fontsize=30)
-    plt.title("Activités de l'équipe Test", fontsize=30)
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), fancybox=True, shadow=True, ncol=5, fontsize=24)
+    plt.xticks(X, weeks, fontsize=fntsize)
+    plt.yticks(fontsize=fntsize)
+    plt.ylabel("Nombre de jours", fontsize=fntsize*1.25)
+    plt.xlabel("Semaines", fontsize=fntsize*1.25)
+    plt.title("Activités de l'équipe Test", fontsize=fntsize*1.25)
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), fancybox=True, shadow=True, ncol=5, fontsize=fntsize)
     manager = plt.get_current_fig_manager()
     manager.window.state('zoomed')
     plt.subplots_adjust(bottom=0.2)
@@ -154,13 +158,14 @@ def interface_data_range(path, weeks):
     layout = [[sg.T(""), sg.Text(path)],
               [sg.Text("Choose first week"), sg.Listbox(weeks, size=(30,3), key="first")],
               [sg.Text("Choose last week"), sg.Listbox(weeks, size=(30,3), key="last")],
+              [sg.Text("Font size (=18 if not filled)"), sg.Input(key="font", size=(3,3))],
               [sg.Button('Run', key="Run")]]
     # Create the window
     window = sg.Window('Data Range', layout)
     # Display and interact with the Window
     event, values = window.read()
     if event=="Run":
-        return[window.Element('first').Widget.curselection()[0], window.Element('last').Widget.curselection()[0]]
+        return[window.Element('first').Widget.curselection()[0], window.Element('last').Widget.curselection()[0], values['font']]
 #====================================================================================================
 #                                       Détection des feuilles Excel
 #====================================================================================================
@@ -184,7 +189,7 @@ wb_obj = openpyxl.load_workbook(xlsx_file, data_only=True)
 dico={}
 weeks=[]
 sheets = filter_sheets(wb_obj)
-[first, last] =interface_data_range(xlsx_file, sheets)
+[first, last, fntsize] =interface_data_range(xlsx_file, sheets)
 for sheetname in sheets[last:first+1]:
     if update_dico(wb_obj[sheetname], dico)==0:
         weeks.append(sheetname)
@@ -195,7 +200,7 @@ for i in dico.keys():
     dico[i].reverse()
 
 if stack:   
-    stackplot(dico, weeks)
+    stackplot(dico, weeks, fntsize)
 if pie_chart:
     pie(dico)
 if write_output:
