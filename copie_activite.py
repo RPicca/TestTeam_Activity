@@ -1,6 +1,10 @@
 import openpyxl
 import matplotlib.pyplot as plt
 import PySimpleGUI as sg 
+import os
+import tempfile
+from office365.sharepoint.client_context import ClientContext
+from office365.runtime.auth.user_credential import UserCredential
 
 #Retourne une liste avec la valeur des cellules d'une plage d'une feuille
 def read_range_cells(sheet, r):
@@ -132,24 +136,31 @@ def write(dico, weeks):
 #====================================================================================================
 #                                       Recup d'info dans la GUI
 #====================================================================================================
-def interface_input():
-    layout = [[sg.T("")], [sg.Text("Choose a file: "), sg.Input(key="file"), sg.FileBrowse()],
+def interface_input(filepath=""):
+    layout = [[sg.T("")], [sg.Text("Choose a file: "), sg.Input(filepath, key="file"), sg.FileBrowse(), sg.Button('Download')],
             [sg.Checkbox('Show Stackplot', default=True, key="stackplot")],
             [sg.Checkbox('Write output in xlsx file', default=True, key="write")],
             [sg.Checkbox('Show Pie (awful design)', default=False, key="pie")],
-            [sg.Button('Run')] ]
+            [sg.Button('Run')]]
     # Create the window
     window = sg.Window('TestTeam Activity', layout)
-
-    # Display and interact with the Window
-    event, values = window.read()
-
+    dico = {}
+    while True:
+        # Display and interact with the Window
+        event, values = window.read()
+        if event ==sg.WIN_CLOSED:
+            break
+        if event == "Run":
+            dico["file"] = values["file"]
+            dico["stackplot"] = values["stackplot"]
+            dico["write"] = values["write"]
+            dico["pie"] = values["pie"]
+            break
+        if event == "Download":
+            sha = interface_sharepoint()
+            filepath = download(sha["sharepoint"], sha["filepath"], sha["email"], sha["password"])
+            window.Element("file").update(filepath)
     window.close()
-    dico={}
-    dico["file"]=values["file"]
-    dico["stackplot"]=values["stackplot"]
-    dico["write"]=values["write"]
-    dico["pie"]=values["pie"]
     return dico
 #====================================================================================================
 #                                     GUI de selection de la plage
@@ -158,7 +169,7 @@ def interface_data_range(path, weeks):
     layout = [[sg.T(""), sg.Text(path)],
               [sg.Text("Choose first week"), sg.Listbox(weeks, size=(30,3), key="first")],
               [sg.Text("Choose last week"), sg.Listbox(weeks, size=(30,3), key="last")],
-              [sg.Text("Font size (=18 if not filled)"), sg.Input(key="font", size=(3,3))],
+              [sg.Text("Font size :"), sg.Input("18",key="font", size=(3,3))],
               [sg.Button('Run', key="Run")]]
     # Create the window
     window = sg.Window('Data Range', layout)
@@ -177,8 +188,46 @@ def filter_sheets(workbook):
             L.append(sheetname)
     return L
 #====================================================================================================
+#                                   Téléchargement depuis Sharepoint
+#====================================================================================================
+def download(site_url, file_url, email, password):
+    if site_url=="":
+        site_url="https://forsksas.sharepoint.com/sites/Testteam2/"
+    if file_url=="":
+        file_url="/sites/Testteam2/Documents partages/2021 - Réunions hebdo/Suivi des activités hebdomadaires.xlsx"
+    download_path = os.path.join(tempfile.mkdtemp(), os.path.basename(file_url))
+    ctx = ClientContext(site_url).with_credentials(UserCredential(email, password))
+    with open(download_path, "wb") as local_file:
+        file = ctx.web.get_file_by_server_relative_path(file_url).download(local_file).execute_query()
+    print("[Ok] file has been downloaded into: {0}".format(download_path))
+    return download_path
+
+#====================================================================================================
+#                                       GUI de download sharepoint
+#====================================================================================================
+def interface_sharepoint():
+    layout = [[sg.Text("Email: "), sg.Input(key="email")],
+              [sg.Text("Password: "), sg.Input(key="password")],
+              [sg.Text("Path to Sharepoint"), sg.Input("https://forsksas.sharepoint.com/sites/Testteam2/",key="sharepoint")],
+              [sg.Text("Path to file"),sg.Input("/sites/Testteam2/Documents partages/2021 - Réunions hebdo/Suivi des activités hebdomadaires.xlsx",key="filepath")],
+            [sg.Button('Download')] ]
+    # Create the window
+    window = sg.Window('Sharepoint download', layout)
+
+    # Display and interact with the Window
+    event, values = window.read()
+    window.close()
+    dico={}
+    dico["email"]=values["email"]
+    dico["password"]=values["password"]
+    dico["filepath"]=values["filepath"]
+    dico["sharepoint"]=values["sharepoint"]
+    return dico
+#====================================================================================================
 #                                                Main
 #====================================================================================================
+# dico=interface_sharepoint()
+# download(dico["sharepoint"], dico["filepath"], dico["email"], dico["password"])
 UI = interface_input()
 xlsx_file = UI["file"]
 stack = UI["stackplot"]
@@ -199,7 +248,7 @@ weeks.reverse()
 for i in dico.keys():
     dico[i].reverse()
 
-if stack:   
+if stack:
     stackplot(dico, weeks, fntsize)
 if pie_chart:
     pie(dico)
