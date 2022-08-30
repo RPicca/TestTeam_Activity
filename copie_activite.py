@@ -209,7 +209,7 @@ def interface_sharepoint():
     layout = [[sg.Text("Email: "), sg.Input(key="email")],
               [sg.Text("Password: "), sg.Input(key="password", password_char="*")],
               [sg.Text("Path to Sharepoint"), sg.Input("https://forsksas.sharepoint.com/sites/Testteam2/",key="sharepoint")],
-              [sg.Text("Path to file"),sg.Input("/sites/Testteam2/Documents partages/2021 - Réunions hebdo/Suivi des activités hebdomadaires.xlsx",key="filepath")],
+              [sg.Text("Path to file"),sg.Input("/sites/Testteam2/Documents partages/Suivi des activités hebdomadaires.xlsx",key="filepath")],
             [sg.Button('Download')] ]
     # Create the window
     window = sg.Window('Sharepoint download', layout)
