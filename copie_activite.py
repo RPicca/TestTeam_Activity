@@ -42,7 +42,7 @@ def update_dico(sheet, dico):
         return -1
     keys= read_range_cells(sheet, range_topic)
     values=read_range_cells(sheet, range_time)
-    # On choppe la taille des valeurs du dico -> Nbr de semaines déjà remplies
+    # On prend la taille des valeurs du dico -> Nbr de semaines déjà remplies
     M=0
 
     if bool(dico):
@@ -65,7 +65,7 @@ def update_dico(sheet, dico):
 #====================================================================================================
 #                                                Graph
 #====================================================================================================
-def stackplot(dico, Weeks, fntsize):
+def stackplot(dico, Weeks, fntsize, color_map):
     if fntsize=="":
         fntsize=18
     else:
@@ -84,7 +84,10 @@ def stackplot(dico, Weeks, fntsize):
     if (len(weeks))>30:
         for i in range (0,len(weeks)-1,2):
             weeks[i]=""
-    plt.stackplot(X, list(dico.values()), labels = dico.keys())
+    if color_map=="":
+        plt.stackplot(X, list(dico.values()), labels = dico.keys())
+    else:
+        plt.stackplot(X, list(dico.values()), labels=dico.keys(), colors=color_map)
     plt.xticks(X, weeks, fontsize=fntsize)
     plt.yticks(fontsize=fntsize)
     plt.ylabel("Nombre de jours", fontsize=fntsize*1.25)
@@ -223,11 +226,37 @@ def interface_sharepoint():
     dico["filepath"]=values["filepath"]
     dico["sharepoint"]=values["sharepoint"]
     return dico
+
+#====================================================================================================
+#                                       GUI de download sharepoint
+#====================================================================================================
+def Color_Choosing_UI(act_lst):
+    dico={}
+    layout=[]
+    color_list=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']*10
+    cnt=-1
+    for i in act_lst:
+        cnt+=1
+        colo=color_list[cnt]
+        dico[i]=colo
+        layout.append([sg.Text(i),sg.In("", visible=False, enable_events=True, key='set_line_color_'+i),sg.ColorChooserButton("", size=(1, 1),target="set_line_color_"+i, button_color=(colo, colo),border_width=1, key=i)],)
+    layout.append([sg.Button('Try'),sg.Button('Close') ])
+    window = sg.Window('Color picking', layout)
+    while True:
+        # Display and interact with the Window
+        event, values = window.read()
+        if event ==sg.WIN_CLOSED or event == "Close":
+            break
+        for i in act_lst:
+            if event=="set_line_color_"+i:
+                window.Element(i).update(button_color=values["set_line_color_"+i])
+                dico[i]=values["set_line_color_"+i]
+        if event == "Try":
+            return dico
+    window.close()
 #====================================================================================================
 #                                                Main
 #====================================================================================================
-# dico=interface_sharepoint()
-# download(dico["sharepoint"], dico["filepath"], dico["email"], dico["password"])
 UI = interface_input()
 xlsx_file = UI["file"]
 stack = UI["stackplot"]
@@ -247,9 +276,9 @@ legend=list(dico.keys())
 weeks.reverse()
 for i in dico.keys():
     dico[i].reverse()
-
+color_map=list(Color_Choosing_UI(legend).values())
 if stack:
-    stackplot(dico, weeks, fntsize)
+    stackplot(dico, weeks, fntsize, color_map)
 if pie_chart:
     pie(dico)
 if write_output:
