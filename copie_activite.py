@@ -11,32 +11,45 @@ def read_range_cells(sheet, r):
     cells = sheet[r[0]:r[1]]
     l=[]
     for c in cells:
-        l.append(c[0].value)
+        if c[0].value ==None:
+            l.append(0)
+        else:
+            l.append(c[0].value)
     return l
 
-def find_range(sheet, word):
-    I=J=-1
+def find_ranges(sheet, word_topic, word_time):
+    I_topic=J_topic=-1
+    topic_found=False
+    time_found=False
     #On cherche la première cellule des activités ou du temps
     for i in range(1,101):
         for j in range(1,101):
-            if sheet.cell(i,j).value==word:
+            if sheet.cell(i,j).value==word_topic:
                 #Cette activité est en fait 2 ligne en dessous du mot clé recherché, on ajoute donc 2...
-                first_cell = sheet.cell(i+2,j).coordinate
-                I=i+2
-                J=j
+                first_cell_topic = sheet.cell(i+2,j).coordinate
+                I_topic=i+2
+                J_topic=j
                 break
-    if I==-1:
+    if I_topic==-1:
         return None
-    for i in range(I,101):
-        if(sheet.cell(i,J).value)==None:
-            last_cell=sheet.cell(i-1,J).coordinate
+    for i in range(J_topic, 101):
+        if sheet.cell(I_topic-2, i).value == word_time:
+            # Cette activité est en fait 2 ligne en dessous du mot clé recherché, on ajoute donc 2...
+            first_cell_time = sheet.cell(I_topic, i).coordinate
+            J_time = i
             break
-    return [first_cell,last_cell]
+    for i in range(I_topic,101):
+        if(sheet.cell(i,J_topic).value)==None:
+            last_cell_topic=sheet.cell(i-1,J_topic).coordinate
+            last_cell_time=sheet.cell(i-1,J_time).coordinate
+            break
+    return [[first_cell_topic,last_cell_topic], [first_cell_time, last_cell_time]]
 
 def update_dico(sheet, dico):
     c=-1
-    range_topic=find_range(sheet, 'HEATMAP')
-    range_time=find_range(sheet, 'Total')
+    ranges=find_ranges(sheet, 'HEATMAP', 'Total')
+    range_topic=ranges[0]
+    range_time=ranges[1]
     if range_time == None or range_topic == None:
         print("Sheet "+ sheet.title+" does not contain the HEATMAP and Total Keywords")
         return -1
@@ -44,7 +57,6 @@ def update_dico(sheet, dico):
     values=read_range_cells(sheet, range_time)
     # On prend la taille des valeurs du dico -> Nbr de semaines déjà remplies
     M=0
-
     if bool(dico):
         M=len(list(dico.values())[0])
     for k in keys:
@@ -60,8 +72,6 @@ def update_dico(sheet, dico):
     for k in set(dico.keys())-set(keys):
         dico[k].append(0)
     return 0
-  
-
 #====================================================================================================
 #                                                Graph
 #====================================================================================================
@@ -98,7 +108,6 @@ def stackplot(dico, Weeks, fntsize, color_map):
     manager.window.state('zoomed')
     plt.subplots_adjust(bottom=0.2)
     plt.show()
-
 #====================================================================================================
 #                                                Pie
 #====================================================================================================
@@ -115,7 +124,6 @@ def pie(dico):
     explode[1]=0.05
     plt.pie(dico_total.values(),explode=explode,labels=dico_total.keys(),autopct='%1.1f%%', startangle = 30)
     plt.show()
-
 #====================================================================================================
 #                                                Write
 #====================================================================================================
@@ -134,8 +142,6 @@ def write(dico, weeks):
             ws.cell(row,col,l)
             row+=1
     wb.save(filename = "Output.xlsx")
-
-
 #====================================================================================================
 #                                       Recup d'info dans la GUI
 #====================================================================================================
@@ -172,14 +178,13 @@ def interface_data_range(path, weeks):
     layout = [[sg.T(""), sg.Text(path)],
               [sg.Text("Choose first week"), sg.Listbox(weeks, size=(30,3), key="first")],
               [sg.Text("Choose last week"), sg.Listbox(weeks, size=(30,3), key="last")],
-              [sg.Text("Font size :"), sg.Input("18",key="font", size=(3,3))],
               [sg.Button('Run', key="Run")]]
     # Create the window
     window = sg.Window('Data Range', layout)
     # Display and interact with the Window
     event, values = window.read()
     if event=="Run":
-        return[window.Element('first').Widget.curselection()[0], window.Element('last').Widget.curselection()[0], values['font']]
+        return[window.Element('first').Widget.curselection()[0], window.Element('last').Widget.curselection()[0]]
 #====================================================================================================
 #                                       Détection des feuilles Excel
 #====================================================================================================
@@ -230,16 +235,20 @@ def interface_sharepoint():
 #====================================================================================================
 #                                       GUI de download sharepoint
 #====================================================================================================
-def Color_Choosing_UI(act_lst):
+def Color_Choosing_UI(activ_dico, weeks):
     dico={}
     layout=[]
     color_list=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']*10
     cnt=-1
+    act_lst=list(activ_dico.keys())
+    layout.append([sg.Text("Edit the colors and click on try to see the result")])
+    layout.append([sg.Text("Close the window when you're done")])
     for i in act_lst:
         cnt+=1
         colo=color_list[cnt]
         dico[i]=colo
         layout.append([sg.Text(i),sg.In("", visible=False, enable_events=True, key='set_line_color_'+i),sg.ColorChooserButton("", size=(1, 1),target="set_line_color_"+i, button_color=(colo, colo),border_width=1, key=i)],)
+    layout.append([sg.Text("Font size :"), sg.Input("18",key="font", size=(3,3))])
     layout.append([sg.Button('Try'),sg.Button('Close') ])
     window = sg.Window('Color picking', layout)
     while True:
@@ -252,8 +261,9 @@ def Color_Choosing_UI(act_lst):
                 window.Element(i).update(button_color=values["set_line_color_"+i])
                 dico[i]=values["set_line_color_"+i]
         if event == "Try":
-            return dico
+            stackplot(activ_dico, weeks, int(values["font"]), list(dico.values()))
     window.close()
+    return dico
 #====================================================================================================
 #                                                Main
 #====================================================================================================
@@ -267,7 +277,7 @@ wb_obj = openpyxl.load_workbook(xlsx_file, data_only=True)
 dico={}
 weeks=[]
 sheets = filter_sheets(wb_obj)
-[first, last, fntsize] =interface_data_range(xlsx_file, sheets)
+[first, last] =interface_data_range(xlsx_file, sheets)
 for sheetname in sheets[last:first+1]:
     if update_dico(wb_obj[sheetname], dico)==0:
         weeks.append(sheetname)
@@ -276,9 +286,8 @@ legend=list(dico.keys())
 weeks.reverse()
 for i in dico.keys():
     dico[i].reverse()
-color_map=list(Color_Choosing_UI(legend).values())
 if stack:
-    stackplot(dico, weeks, fntsize, color_map)
+    Color_Choosing_UI(dico, weeks).values()
 if pie_chart:
     pie(dico)
 if write_output:
