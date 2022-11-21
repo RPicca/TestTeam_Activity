@@ -45,9 +45,9 @@ def find_ranges(sheet, word_topic, word_time):
             break
     return [[first_cell_topic,last_cell_topic], [first_cell_time, last_cell_time]]
 
-def update_dico(sheet, dico):
+def update_dico(sheet, dico, word_time='Total'):
     c=-1
-    ranges=find_ranges(sheet, 'HEATMAP', 'Total')
+    ranges=find_ranges(sheet, 'HEATMAP', word_time)
     range_topic=ranges[0]
     range_time=ranges[1]
     if range_time == None or range_topic == None:
@@ -147,6 +147,7 @@ def write(dico, weeks):
 #====================================================================================================
 def interface_input(filepath=""):
     layout = [[sg.T("")], [sg.Text("Choose a file: "), sg.Input(filepath, key="file"), sg.FileBrowse(), sg.Button('Download')],
+            [sg.Text("Choose a tester: "), sg.Input('Total', key="tester")],
             [sg.Checkbox('Show Stackplot', default=True, key="stackplot")],
             [sg.Checkbox('Write output in xlsx file', default=True, key="write")],
             [sg.Checkbox('Show Pie (awful design)', default=False, key="pie")],
@@ -161,6 +162,7 @@ def interface_input(filepath=""):
             break
         if event == "Run":
             dico["file"] = values["file"]
+            dico["tester"] = values["tester"]
             dico["stackplot"] = values["stackplot"]
             dico["write"] = values["write"]
             dico["pie"] = values["pie"]
@@ -269,6 +271,7 @@ def Color_Choosing_UI(activ_dico, weeks):
 #====================================================================================================
 UI = interface_input()
 xlsx_file = UI["file"]
+tester = UI["tester"]
 stack = UI["stackplot"]
 write_output=UI["write"]
 pie_chart=UI["pie"]
@@ -279,7 +282,7 @@ weeks=[]
 sheets = filter_sheets(wb_obj)
 [first, last] =interface_data_range(xlsx_file, sheets)
 for sheetname in sheets[last:first+1]:
-    if update_dico(wb_obj[sheetname], dico)==0:
+    if update_dico(wb_obj[sheetname], dico, tester)==0:
         weeks.append(sheetname)
 legend=list(dico.keys())
 #On se remet dans le bon sens
