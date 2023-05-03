@@ -210,6 +210,10 @@ def download(site_url, file_url, email, password):
     with open(download_path, "wb") as local_file:
         file = ctx.web.get_file_by_server_relative_path(file_url).download(local_file).execute_query()
     print("[Ok] file has been downloaded into: {0}".format(download_path))
+    # On écrit un fichier ini pour qu'on se souvienne du dernier fichier téléchargé
+    f=open("graph.ini", "w")
+    f.write("last_download:"+download_path)
+    f.close()
     return download_path
 
 #====================================================================================================
@@ -269,7 +273,11 @@ def Color_Choosing_UI(activ_dico, weeks):
 #====================================================================================================
 #                                                Main
 #====================================================================================================
-UI = interface_input()
+last_download=""
+if os.path.isfile("graph.ini"):
+    f=open("graph.ini", "r")
+    last_download=f.readline().split(":",1)[1]
+UI = interface_input(last_download)
 xlsx_file = UI["file"]
 tester = UI["tester"]
 stack = UI["stackplot"]
