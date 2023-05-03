@@ -1,0 +1,1 @@
+pyinstaller --onefile --windowed --clean copie_activite.py
