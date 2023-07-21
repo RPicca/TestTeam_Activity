@@ -1,5 +1,4 @@
 # TestTeam_Activity
-**L'exécutable est présent dans le répertoire dist**
 
 **Prérequis pour l'utilisation du code source** : un Python avec openpyxl, PySimpleGUI  et matplotlib installés 
 
