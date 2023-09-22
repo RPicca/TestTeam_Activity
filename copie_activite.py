@@ -146,7 +146,8 @@ def write(dico, weeks):
 #                                       Recup d'info dans la GUI
 #====================================================================================================
 def interface_input(filepath=""):
-    layout = [[sg.T("")], [sg.Text("Choose a file: "), sg.Input(filepath, key="file"), sg.FileBrowse(), sg.Button('Download')],
+#    layout = [[sg.T("")], [sg.Text("Choose a file: "), sg.Input(filepath, key="file"), sg.FileBrowse(), sg.Button('Download')],
+    layout = [[sg.T("")], [sg.Text("Choose a file: "), sg.Input(filepath, key="file"), sg.FileBrowse()],
             [sg.Text("Choose a tester: "), sg.Input('Total', key="tester")],
             [sg.Checkbox('Show Stackplot', default=True, key="stackplot")],
             [sg.Checkbox('Write output in xlsx file', default=True, key="write")],
@@ -199,6 +200,7 @@ def filter_sheets(workbook):
     return L
 #====================================================================================================
 #                                   Téléchargement depuis Sharepoint
+# /!\ Plus possible suite à des changements de paramètrage du sharepoint...
 #====================================================================================================
 def download(site_url, file_url, email, password):
     if site_url=="":
@@ -224,7 +226,8 @@ def interface_sharepoint():
               [sg.Text("Password: "), sg.Input(key="password", password_char="*")],
               [sg.Text("Path to Sharepoint"), sg.Input("https://forsksas.sharepoint.com/sites/Testteam2/",key="sharepoint")],
               [sg.Text("Path to file"),sg.Input("/sites/Testteam2/Documents partages/Suivi des activités hebdomadaires.xlsx",key="filepath")],
-            [sg.Button('Download')] ]
+              [sg.Button('Download')] 
+            ]
     # Create the window
     window = sg.Window('Sharepoint download', layout)
 
@@ -239,7 +242,7 @@ def interface_sharepoint():
     return dico
 
 #====================================================================================================
-#                                       GUI de download sharepoint
+#                                       GUI de paramètrage graphique
 #====================================================================================================
 def Color_Choosing_UI(activ_dico, weeks):
     dico={}
