@@ -146,7 +146,6 @@ def write(dico, weeks, path=os.getenv("userprofile")+"\\Downloads\\Output.xlsx")
 #                                       Recup d'info dans la GUI
 #====================================================================================================
 def interface_input(filepath=""):
-#    layout = [[T("")], [Text("Choose a file: "), Input(filepath, key="file"), FileBrowse(), Button('Download')],
     layout = [[T("")], [Text("Choose a file: "), Input(filepath, key="file"), FileBrowse()],
             [Text("Choose a tester: "), Input('Total', key="tester")],
             [Checkbox('Show Stackplot', default=True, key="stackplot")],
@@ -168,10 +167,6 @@ def interface_input(filepath=""):
             dico["write"] = values["write"]
             dico["pie"] = values["pie"]
             break
-        if event == "Download":
-            sha = interface_sharepoint()
-            filepath = download(sha["sharepoint"], sha["filepath"], sha["email"], sha["password"])
-            window.Element("file").update(filepath)
     window.close()
     return dico
 #====================================================================================================
@@ -198,48 +193,6 @@ def filter_sheets(workbook):
         if (sheetname[0] == "S" or sheetname[0]=="s") and any(char.isdigit() for char in sheetname):
             L.append(sheetname)
     return L
-#====================================================================================================
-#                                   Téléchargement depuis Sharepoint
-# /!\ Plus possible suite à des changements de paramètrage du sharepoint...
-#====================================================================================================
-def download(site_url, file_url, email, password):
-    if site_url=="":
-        site_url="https://forsksas.sharepoint.com/sites/Testteam2/"
-    if file_url=="":
-        file_url="/sites/Testteam2/Documents partages/2021 - Réunions hebdo/Suivi des activités hebdomadaires.xlsx"
-    download_path = os.path.join(tempfile.mkdtemp(), os.path.basename(file_url))
-    ctx = ClientContext(site_url).with_credentials(UserCredential(email, password))
-    with open(download_path, "wb") as local_file:
-        file = ctx.web.get_file_by_server_relative_path(file_url).download(local_file).execute_query()
-    print("[Ok] file has been downloaded into: {0}".format(download_path))
-    # On écrit un fichier ini pour qu'on se souvienne du dernier fichier téléchargé
-    f=open("graph.ini", "w")
-    f.write("last_download:"+download_path)
-    f.close()
-    return download_path
-
-#====================================================================================================
-#                                       GUI de download sharepoint
-#====================================================================================================
-def interface_sharepoint():
-    layout = [[Text("Email: "), Input(key="email")],
-              [Text("Password: "), Input(key="password", password_char="*")],
-              [Text("Path to Sharepoint"), Input("https://forsksas.sharepoint.com/sites/Testteam2/",key="sharepoint")],
-              [Text("Path to file"),Input("/sites/Testteam2/Documents partages/Suivi des activités hebdomadaires.xlsx",key="filepath")],
-              [Button('Download')] 
-            ]
-    # Create the window
-    window = Window('Sharepoint download', layout)
-
-    # Display and interact with the Window
-    event, values = window.read()
-    window.close()
-    dico={}
-    dico["email"]=values["email"]
-    dico["password"]=values["password"]
-    dico["filepath"]=values["filepath"]
-    dico["sharepoint"]=values["sharepoint"]
-    return dico
 
 #====================================================================================================
 #                                       GUI de paramètrage graphique
@@ -276,11 +229,7 @@ def Color_Choosing_UI(activ_dico, weeks):
 #====================================================================================================
 #                                                Main
 #====================================================================================================
-last_download=""
-""" if os.path.isfile("graph.ini"):
-    f=open("graph.ini", "r")
-    last_download=f.readline().split(":",1)[1] """
-UI = interface_input(last_download)
+UI = interface_input()
 xlsx_file = UI["file"]
 tester = UI["tester"]
 stack = UI["stackplot"]
