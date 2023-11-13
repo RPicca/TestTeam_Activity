@@ -2,9 +2,6 @@ import openpyxl
 import matplotlib.pyplot as plt
 from PySimpleGUI import T, Text, Input, FileBrowse, Button, Checkbox, Window, WIN_CLOSED, Listbox, In, ColorChooserButton
 import os
-import tempfile
-from office365.sharepoint.client_context import ClientContext
-from office365.runtime.auth.user_credential import UserCredential
 
 #Retourne une liste avec la valeur des cellules d'une plage d'une feuille
 def read_range_cells(sheet, r):
@@ -19,8 +16,6 @@ def read_range_cells(sheet, r):
 
 def find_ranges(sheet, word_topic, word_time):
     I_topic=J_topic=-1
-    topic_found=False
-    time_found=False
     #On cherche la première cellule des activités ou du temps
     for i in range(1,101):
         for j in range(1,101):
@@ -186,7 +181,7 @@ def interface_data_range(path, weeks):
 #====================================================================================================
 #                                       Détection des feuilles Excel
 #====================================================================================================
-def filter_sheets(workbook):
+def filter_sheets(wb_obj):
     L=[]
     for sheetname in wb_obj.sheetnames:
         # On considère qu'une feuille est exploitable si elle contient un S au début
