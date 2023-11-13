@@ -247,7 +247,7 @@ def interface_sharepoint():
 def Color_Choosing_UI(activ_dico, weeks):
     dico={}
     layout=[]
-    color_list=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']*10
+    color_list=['#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#d62728', '#ff9896', '#9467bd', '#c5b0d5', '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d', '#17becf', '#9edae5']*10
     cnt=-1
     act_lst=list(activ_dico.keys())
     layout.append([sg.Text("Edit the colors and click on try to see the result")])
@@ -277,9 +277,9 @@ def Color_Choosing_UI(activ_dico, weeks):
 #                                                Main
 #====================================================================================================
 last_download=""
-if os.path.isfile("graph.ini"):
+""" if os.path.isfile("graph.ini"):
     f=open("graph.ini", "r")
-    last_download=f.readline().split(":",1)[1]
+    last_download=f.readline().split(":",1)[1] """
 UI = interface_input(last_download)
 xlsx_file = UI["file"]
 tester = UI["tester"]
@@ -298,8 +298,14 @@ for sheetname in sheets[last:first+1]:
 legend=list(dico.keys())
 #On se remet dans le bon sens
 weeks.reverse()
+null_keys=[]
 for i in dico.keys():
+    if all(v == 0 for v in dico[i]):
+        null_keys.append(i)
     dico[i].reverse()
+#On vire les entrées avec que des 0
+for i in null_keys:
+    dico.pop(i, None)
 if stack:
     Color_Choosing_UI(dico, weeks).values()
 if pie_chart:
