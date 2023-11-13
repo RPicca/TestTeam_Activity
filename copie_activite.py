@@ -127,7 +127,7 @@ def pie(dico):
 #====================================================================================================
 #                                                Write
 #====================================================================================================
-def write(dico, weeks):
+def write(dico, weeks, path=os.getenv("userprofile")+"\\Downloads\\Output.xlsx"):
     #On écrit le dico dans une feuille excel
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -141,7 +141,7 @@ def write(dico, weeks):
         for l in dico[k]:
             ws.cell(row,col,l)
             row+=1
-    wb.save(filename = "Output.xlsx")
+    wb.save(filename = path)
 #====================================================================================================
 #                                       Recup d'info dans la GUI
 #====================================================================================================
