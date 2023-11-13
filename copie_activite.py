@@ -1,6 +1,6 @@
 import openpyxl
 import matplotlib.pyplot as plt
-import PySimpleGUI as sg 
+from PySimpleGUI import T, Text, Input, FileBrowse, Button, Checkbox, Window, WIN_CLOSED, Listbox, In, ColorChooserButton
 import os
 import tempfile
 from office365.sharepoint.client_context import ClientContext
@@ -146,20 +146,20 @@ def write(dico, weeks, path=os.getenv("userprofile")+"\\Downloads\\Output.xlsx")
 #                                       Recup d'info dans la GUI
 #====================================================================================================
 def interface_input(filepath=""):
-#    layout = [[sg.T("")], [sg.Text("Choose a file: "), sg.Input(filepath, key="file"), sg.FileBrowse(), sg.Button('Download')],
-    layout = [[sg.T("")], [sg.Text("Choose a file: "), sg.Input(filepath, key="file"), sg.FileBrowse()],
-            [sg.Text("Choose a tester: "), sg.Input('Total', key="tester")],
-            [sg.Checkbox('Show Stackplot', default=True, key="stackplot")],
-            [sg.Checkbox('Write output in xlsx file', default=True, key="write")],
-            [sg.Checkbox('Show Pie (awful design)', default=False, key="pie")],
-            [sg.Button('Run')]]
+#    layout = [[T("")], [Text("Choose a file: "), Input(filepath, key="file"), FileBrowse(), Button('Download')],
+    layout = [[T("")], [Text("Choose a file: "), Input(filepath, key="file"), FileBrowse()],
+            [Text("Choose a tester: "), Input('Total', key="tester")],
+            [Checkbox('Show Stackplot', default=True, key="stackplot")],
+            [Checkbox('Write output in xlsx file', default=True, key="write")],
+            [Checkbox('Show Pie (awful design)', default=False, key="pie")],
+            [Button('Run')]]
     # Create the window
-    window = sg.Window('TestTeam Activity', layout)
+    window = Window('TestTeam Activity', layout)
     dico = {}
     while True:
         # Display and interact with the Window
         event, values = window.read()
-        if event ==sg.WIN_CLOSED:
+        if event ==WIN_CLOSED:
             break
         if event == "Run":
             dico["file"] = values["file"]
@@ -178,12 +178,12 @@ def interface_input(filepath=""):
 #                                     GUI de selection de la plage
 #====================================================================================================
 def interface_data_range(path, weeks):
-    layout = [[sg.T(""), sg.Text(path)],
-              [sg.Text("Choose first week"), sg.Listbox(weeks, size=(30,3), key="first")],
-              [sg.Text("Choose last week"), sg.Listbox(weeks, size=(30,3), key="last")],
-              [sg.Button('Run', key="Run")]]
+    layout = [[T(""), Text(path)],
+              [Text("Choose first week"), Listbox(weeks, size=(30,3), key="first")],
+              [Text("Choose last week"), Listbox(weeks, size=(30,3), key="last")],
+              [Button('Run', key="Run")]]
     # Create the window
-    window = sg.Window('Data Range', layout)
+    window = Window('Data Range', layout)
     # Display and interact with the Window
     event, values = window.read()
     if event=="Run":
@@ -222,14 +222,14 @@ def download(site_url, file_url, email, password):
 #                                       GUI de download sharepoint
 #====================================================================================================
 def interface_sharepoint():
-    layout = [[sg.Text("Email: "), sg.Input(key="email")],
-              [sg.Text("Password: "), sg.Input(key="password", password_char="*")],
-              [sg.Text("Path to Sharepoint"), sg.Input("https://forsksas.sharepoint.com/sites/Testteam2/",key="sharepoint")],
-              [sg.Text("Path to file"),sg.Input("/sites/Testteam2/Documents partages/Suivi des activités hebdomadaires.xlsx",key="filepath")],
-              [sg.Button('Download')] 
+    layout = [[Text("Email: "), Input(key="email")],
+              [Text("Password: "), Input(key="password", password_char="*")],
+              [Text("Path to Sharepoint"), Input("https://forsksas.sharepoint.com/sites/Testteam2/",key="sharepoint")],
+              [Text("Path to file"),Input("/sites/Testteam2/Documents partages/Suivi des activités hebdomadaires.xlsx",key="filepath")],
+              [Button('Download')] 
             ]
     # Create the window
-    window = sg.Window('Sharepoint download', layout)
+    window = Window('Sharepoint download', layout)
 
     # Display and interact with the Window
     event, values = window.read()
@@ -250,20 +250,20 @@ def Color_Choosing_UI(activ_dico, weeks):
     color_list=['#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#d62728', '#ff9896', '#9467bd', '#c5b0d5', '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d', '#17becf', '#9edae5']*10
     cnt=-1
     act_lst=list(activ_dico.keys())
-    layout.append([sg.Text("Edit the colors and click on try to see the result")])
-    layout.append([sg.Text("Close the window when you're done")])
+    layout.append([Text("Edit the colors and click on try to see the result")])
+    layout.append([Text("Close the window when you're done")])
     for i in act_lst:
         cnt+=1
         colo=color_list[cnt]
         dico[i]=colo
-        layout.append([sg.Text(i),sg.In("", visible=False, enable_events=True, key='set_line_color_'+i),sg.ColorChooserButton("", size=(1, 1),target="set_line_color_"+i, button_color=(colo, colo),border_width=1, key=i)],)
-    layout.append([sg.Text("Font size :"), sg.Input("18",key="font", size=(3,3))])
-    layout.append([sg.Button('Try'),sg.Button('Close') ])
-    window = sg.Window('Color picking', layout)
+        layout.append([Text(i),In("", visible=False, enable_events=True, key='set_line_color_'+i),ColorChooserButton("", size=(1, 1),target="set_line_color_"+i, button_color=(colo, colo),border_width=1, key=i)],)
+    layout.append([Text("Font size :"), Input("18",key="font", size=(3,3))])
+    layout.append([Button('Try'),Button('Close') ])
+    window = Window('Color picking', layout)
     while True:
         # Display and interact with the Window
         event, values = window.read()
-        if event ==sg.WIN_CLOSED or event == "Close":
+        if event ==WIN_CLOSED or event == "Close":
             break
         for i in act_lst:
             if event=="set_line_color_"+i:
